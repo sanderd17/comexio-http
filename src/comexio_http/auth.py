@@ -5,9 +5,8 @@ import base64
 class Auth:
     """Class to make authenticated requests."""
 
-    def __init__(self, session: ClientSession, host: str, user_name: str, password: str):
+    def __init__(self, host: str, user_name: str, password: str):
         """Initialize the auth."""
-        self.session = session
         self.host = host
         self.user_name = user_name
         self.password = password
@@ -21,11 +20,13 @@ class Auth:
       else:
           headers = dict(headers)
 
-      headers["authorization"] = f"Basic {self.encoded_login}"
+      headers["authorization"] = f"Basic {self.encoded_login()}"
 
-      resp = await self.session.request(
+      session = ClientSession()
+      resp = await session.request(
           "get", f"http://{self.host}/api", **kwargs, params=params, headers=headers,
       )
+      await session.close()
 
       resp.raise_for_status()
       return await resp.text()

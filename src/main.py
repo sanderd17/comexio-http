@@ -3,10 +3,9 @@
 import asyncio
 import argparse
 
-from aiohttp import ClientSession
 from getpass import getpass
 
-from comexio import Auth, IO, Marker, Onewire
+from comexio_http import Auth, IO, Marker, Onewire
 
 def choose(*options):
   print("Please choose:")
@@ -33,25 +32,24 @@ def get_tag(auth: Auth):
     address = input("Address (i.e. \"OT1\"): ")
     return Onewire(address, auth)
 
-def get_value(auth: Auth):
+def get_value(auth: Auth, event_loop):
   tag = get_tag(auth)
-  asyncio.run(tag.async_get())
+  event_loop.run_until_complete(tag.async_get())
   print(f"Value: {tag.value}")
 
-def set_value(auth: Auth):
+def set_value(auth: Auth, event_loop):
   tag = get_tag(auth)
   value = input("Value: ")
-  asyncio.run(tag.async_set(value))
+  event_loop.run_until_complete(tag.async_set(value))
   print(f"Value: {tag.value}")
 
-def main(auth: Auth):
+def main(auth: Auth, event_loop):
   choice = input("g/s/q/h? ")
   if choice == "g":
-    get_value(auth)
+    get_value(auth, event_loop)
   elif choice == "s":
-    set_value(auth)
+    set_value(auth, event_loop)
   elif choice == "q":
-    asyncio.run(auth.session.close())
     exit()
   else:
     print("Choose an option:")
@@ -59,10 +57,7 @@ def main(auth: Auth):
     print(" s) Set value")
     print(" q) Quit")
     print(" h) Help")
-  main(auth)
-
-async def create_session():
-    return ClientSession()
+  main(auth, event_loop)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -74,6 +69,6 @@ if __name__ == "__main__":
   host = args.hostname or input("Hostname: ")
   user = args.user or input("User: ")
   password = args.password or getpass()
-  session = asyncio.run(create_session())
-  auth = Auth(session, host, user, password)
-  main(auth)
+  event_loop = asyncio.new_event_loop()
+  auth = Auth(host, user, password)
+  main(auth, event_loop)
