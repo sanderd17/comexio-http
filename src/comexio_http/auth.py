@@ -3,34 +3,27 @@ import base64
 
 
 class Auth:
-    """Class to make authenticated requests."""
+  """Class to make authenticated requests."""
 
-    def __init__(self, host: str, user_name: str, password: str):
-        """Initialize the auth."""
-        self.host = host
-        self.user_name = user_name
-        self.password = password
+  def __init__(self, host: str, user_name: str, password: str):
+      """Initialize the auth."""
+      self.host = host
+      self.user_name = user_name
+      self.password = password
+      self.url = f"http://{self.host}/api"
 
-    async def request(self, params: dict, **kwargs) -> ClientResponse:
-      """Get or set a data point"""
-      headers = kwargs.get("headers")
+  async def request(self, params: dict) -> str:
+    """Get or set a data point"""
 
-      if headers is None:
-          headers = {}
-      else:
-          headers = dict(headers)
+    headers = {
+      "authorization": f"Basic {self.encoded_login()}"
+    }
 
-      headers["authorization"] = f"Basic {self.encoded_login()}"
+    async with ClientSession(read_timeout=5) as client:
+      async with client.get(self.url, params=params, headers=headers) as resp:
+        resp.raise_for_status()
+        return await resp.text()
 
-      session = ClientSession()
-      resp = await session.request(
-          "get", f"http://{self.host}/api", **kwargs, params=params, headers=headers,
-      )
-      await session.close()
-
-      resp.raise_for_status()
-      return await resp.text()
-
-    def encoded_login(self):
-      login = f"{self.user_name}:{self.password}"
-      return base64.b64encode(login.encode("utf-8")).decode("ascii")
+  def encoded_login(self):
+    login = f"{self.user_name}:{self.password}"
+    return base64.b64encode(login.encode("utf-8")).decode("ascii")

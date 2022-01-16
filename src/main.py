@@ -61,9 +61,9 @@ def main(auth: Auth, event_loop):
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument('--hostname', type=str)
-  parser.add_argument('--user', type=str)
-  parser.add_argument('--password', type=str)
+  parser.add_argument('--hostname', type=str, help="IP address or host name of the server")
+  parser.add_argument('--user', type=str, help="Username as configured in the HTTP API settings on the Comexio server")
+  parser.add_argument('--password', type=str, help="Password as configured in the HTTP API settings on the Comexio server")
   args = parser.parse_args()
 
   host = args.hostname or input("Hostname: ")
